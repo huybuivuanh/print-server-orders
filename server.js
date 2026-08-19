@@ -33,11 +33,7 @@ async function processQueue() {
     // the original order time.
     try {
       if (order?.id && order?.orderType) {
-        const collectionName =
-          order.orderType === CONFIG.ORDER_TYPES.DINE_IN
-            ? "dineInOrders"
-            : "takeOutOrders";
-        const orderRef = db.collection(collectionName).doc(order.id);
+        const orderRef = db.collection("orders").doc(order.id);
         const orderDoc = await orderRef.get();
 
         if (orderDoc.exists) {
@@ -56,12 +52,8 @@ async function processQueue() {
 
     console.log("Printing order:", order.id);
 
-    if (order.orderType === CONFIG.ORDER_TYPES.TAKE_OUT) {
-      for (const lane of CONFIG.TAKEOUT_PRINT_LANES) {
-        await printOrder(order, lane);
-      }
-    } else {
-      await printOrder(order, "");
+    for (const lane of CONFIG.TAKEOUT_PRINT_LANES) {
+      await printOrder(order, lane);
     }
 
     console.log("✅ Print completed for order:", order.id);
@@ -71,12 +63,7 @@ async function processQueue() {
         `No printId for order ${order.id}; skipping Firestore printed flags (Partial Order)`,
       );
     } else {
-      const collectionName =
-        order.orderType === CONFIG.ORDER_TYPES.DINE_IN
-          ? "dineInOrders"
-          : "takeOutOrders";
-
-      const orderRef = db.collection(collectionName).doc(order.id);
+      const orderRef = db.collection("orders").doc(order.id);
       const queueRef = db.collection("printQueue").doc(order.printId);
       const orderDoc = await orderRef.get();
 
@@ -84,9 +71,7 @@ async function processQueue() {
       if (orderDoc.exists) {
         batch.update(orderRef, { printed: true });
       } else {
-        console.log(
-          `⚠️ Order ${order.id} not found in ${collectionName} (Partial Order)`,
-        );
+        console.log(`⚠️ Order ${order.id} not found in orders (Partial Order)`);
       }
       batch.update(queueRef, { printed: true });
       await batch.commit();

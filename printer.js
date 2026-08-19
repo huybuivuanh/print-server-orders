@@ -174,13 +174,8 @@ function printOrderTypeHeader(printer, order, kitchen) {
   printer.setTextSize(2, 2);
   printer.bold(false);
 
-  if (
-    order.orderType === CONFIG.ORDER_TYPES.TAKE_OUT &&
-    !isScheduledTakeOut(order)
-  ) {
-    printer.println(`*Take Out ${kitchen}*`);
-  } else if (order.tableNumber) {
-    printer.println(`Table: ${order.tableNumber}`);
+  if (!isScheduledTakeOut(order)) {
+    printer.println(`*Online ${kitchen}*`);
   }
 }
 
@@ -188,7 +183,7 @@ function printPreorderInfo(printer, order, kitchen) {
   if (!isScheduledTakeOut(order)) return;
 
   printer.setTextQuadArea();
-  printer.println(`***Pre-Order ${kitchen}***`);
+  printer.println(`***Online ${kitchen}***`);
 
   const preorderDate = scheduledPickupDate(order);
   if (preorderDate) {
@@ -243,25 +238,20 @@ function printOrderDetails(printer, order) {
   }
 
   const readyMins = immediateReadyMinutes(order);
-  if (
-    order.orderType === CONFIG.ORDER_TYPES.TAKE_OUT &&
-    !isScheduledTakeOut(order) &&
-    readyMins != null
-  ) {
+  if (!isScheduledTakeOut(order) && readyMins != null) {
     printer.println(`Ready in: ${readyMins} mins`);
   }
+  printer.println(`Order number: ${order.orderNumber}`);
 
   printer.setTextQuadArea();
   printer.bold(false);
 
-  if (order.orderType === CONFIG.ORDER_TYPES.TAKE_OUT) {
-    const custName = takeOutCustomerName(order);
-    if (custName) {
-      printer.println(`Name: ${custName.toUpperCase()}`);
-    }
-    if (order.phoneNumber) {
-      printer.println(`Phone #: ${formatPhone(order.phoneNumber)}`);
-    }
+  const custName = takeOutCustomerName(order);
+  if (custName) {
+    printer.println(`Name: ${custName.toUpperCase()}`);
+  }
+  if (order.phoneNumber) {
+    printer.println(`Phone #: ${formatPhone(order.phoneNumber)}`);
   }
 
   printer.setTextNormal();
@@ -399,17 +389,12 @@ function printFooter(printer, order, kitchen) {
   printer.setTextSize(2, 2);
   printer.bold(false);
 
-  if (order.orderType === CONFIG.ORDER_TYPES.TAKE_OUT) {
-    if (!isScheduledTakeOut(order)) {
-      printer.newLine();
-      printer.println(`*Take Out ${kitchen}*`);
-    } else {
-      printer.newLine();
-      printPreorderInfo(printer, order, kitchen);
-    }
-  } else if (order.tableNumber) {
+  if (!isScheduledTakeOut(order)) {
     printer.newLine();
-    printer.println(`Table: ${order.tableNumber}`);
+    printer.println(`*Online ${kitchen}*`);
+  } else {
+    printer.newLine();
+    printPreorderInfo(printer, order, kitchen);
   }
 
   printer.newLine();
