@@ -5,3 +5,5 @@ admin-sdk.json
 .DS_Store
 
 logs/
+
+.claude

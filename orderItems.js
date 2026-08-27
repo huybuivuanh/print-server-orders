@@ -53,9 +53,21 @@ function preprocessOrderItem(item) {
   const qty = processed.quantity ?? processed.qty ?? 1;
   processed.quantity = qty;
 
+  const overrideName = CONFIG.NAME_OVERRIDES[processed.name];
+  if (overrideName) {
+    processed.name = overrideName;
+  }
+
   if (!Array.isArray(processed.options) || processed.options.length === 0) {
     return processed;
   }
+
+  // Rename options up front. Maps to new objects so the source order items are
+  // never mutated.
+  processed.options = processed.options.map((opt) => {
+    const overrideOption = CONFIG.OPTION_OVERRIDES[opt.name];
+    return overrideOption ? { ...opt, name: overrideOption } : opt;
+  });
 
   if (processed.name === CONFIG.SPECIAL_ITEM) {
     const mainOption = processed.options.find(
