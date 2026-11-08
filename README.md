@@ -1,13 +1,19 @@
 # Print Server
 
-A Node.js service that listens to a Firestore `printQueue` collection and prints thermal receipts for dine-in and take-out orders for Asian Le POS.
+A Node.js service that listens to a Firestore `onlinePrintQueue` collection and prints thermal receipts for dine-in and take-out orders for Asian Le POS.
+
+> **Shared Firebase project:** this server uses the shared `asianlepos` project, where each
+> business's data is under `businesses/{id}/…`. It prints online (website) orders sent from the Orders app from
+> `businesses/{BUSINESS_ID}/onlinePrintQueue` (and marks the order printed in `orders`, in the same business). Set `BUSINESS_ID` in `config.js` to this restaurant's business doc id — the server
+> won't start without it. `admin-sdk.json` must be a service account key for `asianlepos`.
+
 
 ## How it works
 
-1. The server connects to Firestore and watches the `printQueue` collection for new documents.
+1. The server connects to Firestore and watches the `onlinePrintQueue` collection for new documents.
 2. When an unprinted order appears, it is pushed into a local queue.
 3. Orders are printed one at a time to avoid collisions.
-4. After a successful print, the order document and its `printQueue` entry are marked `printed: true` in Firestore.
+4. After a successful print, the order document and its `onlinePrintQueue` entry are marked `printed: true` in Firestore.
 
 Take-out orders are printed twice (lanes **B** then **A**) with different slip labels but identical line items.
 
@@ -135,7 +141,7 @@ The token is defined in `config.js`.
 
 ## Firestore schema
 
-The server reads from the `printQueue` collection. Each document is expected to have:
+The server reads from the `onlinePrintQueue` collection. Each document is expected to have:
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -143,6 +149,6 @@ The server reads from the `printQueue` collection. Each document is expected to 
 | `orderType` | string | `"Dine In"` or `"Take Out"` |
 | `orderItems` | array | Line items |
 | `printed` | boolean | Set to `true` after printing |
-| `printId` | string | Auto-set from the `printQueue` doc ID |
+| `printId` | string | Auto-set from the `onlinePrintQueue` doc ID |
 
 After printing, the server also updates the corresponding `dineInOrders` or `takeOutOrders` document.

@@ -1,6 +1,6 @@
 const express = require("express");
 const { CONFIG } = require("./config");
-const { db } = require("./firestore");
+const { db, biz } = require("./firestore");
 const { printOrder } = require("./printer");
 
 const app = express();
@@ -33,7 +33,7 @@ async function processQueue() {
     // the original order time.
     try {
       if (order?.id && order?.orderType) {
-        const orderRef = db.collection("orders").doc(order.id);
+        const orderRef = biz("orders").doc(order.id);
         const orderDoc = await orderRef.get();
 
         if (orderDoc.exists) {
@@ -63,8 +63,8 @@ async function processQueue() {
         `No printId for order ${order.id}; skipping Firestore printed flags (Partial Order)`,
       );
     } else {
-      const orderRef = db.collection("orders").doc(order.id);
-      const queueRef = db.collection("printQueue").doc(order.printId);
+      const orderRef = biz("orders").doc(order.id);
+      const queueRef = biz("onlinePrintQueue").doc(order.printId);
       const orderDoc = await orderRef.get();
 
       const batch = db.batch();
@@ -99,7 +99,7 @@ function startSnapshotListenerWithRetry(
     try {
       console.log("Attempting Firestore connection...");
 
-      db.collection("printQueue").onSnapshot(
+      biz("onlinePrintQueue").onSnapshot(
         (snapshot) => {
           if (snapshot.empty) return;
 
