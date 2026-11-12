@@ -1,11 +1,16 @@
 # Print Server
 
-A Node.js service that listens to a Firestore `onlinePrintQueue` collection and prints thermal receipts for dine-in and take-out orders for Asian Le POS.
+A Node.js service that listens to a Firestore `onlinePrintQueue` collection and prints thermal receipts for online (website) orders sent from the Asian Le Orders app.
 
 > **Shared Firebase project:** this server uses the shared `asianlepos` project, where each
-> business's data is under `businesses/{id}/…`. It prints online (website) orders sent from the Orders app from
-> `businesses/{BUSINESS_ID}/onlinePrintQueue` (and marks the order printed in `orders`, in the same business). Set `BUSINESS_ID` in `config.js` to this restaurant's business doc id — the server
-> won't start without it. `admin-sdk.json` must be a service account key for `asianlepos`.
+> business's data is under `businesses/{id}/…`. It prints from
+> `businesses/{BUSINESS_ID}/onlinePrintQueue` and marks the order printed in `orders`, in the same business.
+> `BUSINESS_ID` in `config.js` is set to the Asian Le business; the server won't start without it.
+> `admin-sdk.json` must be a service account key for `asianlepos`.
+
+Reprinting from the Orders app replaces the order's queue doc, so it prints again.
+When the discount is a rewards redemption, the receipt shows it as `Rewards (N pts)` instead of
+`Discount ($X)`.
 
 
 ## How it works
@@ -151,4 +156,4 @@ The server reads from the `onlinePrintQueue` collection. Each document is expect
 | `printed` | boolean | Set to `true` after printing |
 | `printId` | string | Auto-set from the `onlinePrintQueue` doc ID |
 
-After printing, the server also updates the corresponding `dineInOrders` or `takeOutOrders` document.
+After printing, the server also sets `printed: true` on the matching `businesses/{BUSINESS_ID}/orders/{id}` document, in the same batch.
